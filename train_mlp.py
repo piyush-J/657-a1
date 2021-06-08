@@ -29,7 +29,8 @@ class MLP_Q4:
         np.random.seed(1)  # setting seed value
         for layer_index in range(1, len(self.layers_size)):  # initializing the weights as random and biases as zeros
             self.parameters["W" + str(layer_index)] = np.random.randn(self.layers_size[layer_index],
-                                                                      self.layers_size[layer_index - 1])
+                                                                      self.layers_size[layer_index - 1]) / np.sqrt(
+                                                                                    self.layers_size[layer_index - 1])
             self.parameters["b" + str(layer_index)] = np.zeros((self.layers_size[layer_index], 1))
 
     def forward(self, x):
@@ -52,7 +53,7 @@ class MLP_Q4:
         return f_, parameters_
 
     def backward(self, X_train, y_train, parameter_):
-        derivatives = {}  # to store dE/dW_2,ndE/dW_1, dE/db_2, dE/db_1 for weight updation
+        derivatives = {}  # to store dE/dW_2, dE/dW_1, dE/db_2, dE/db_1 for weight updation
         parameter_["f_0"] = X_train.T
         f = parameter_["f_2"]  # y-hat from forward pass
         df = f - y_train.T  # derivative of cross entropy loss with softmax
@@ -78,6 +79,10 @@ class MLP_Q4:
         return derivatives
 
     def fit(self, X_train, y_train, X_valid, y_valid, learning_rate=0.01, epochs=2500):
+        best_val_acc = 0
+        best_epoch = 0
+        early_stop_val_acc_delta = 0.1
+        early_stop_patience = 50
         np.random.seed(1)  # setting a seed value
         self.n = X_train.shape[0]  # size of training set
         self.layers_size.insert(0, X_train.shape[1])  # the input dimension will decide the weights/bias dimensions
@@ -96,12 +101,22 @@ class MLP_Q4:
                                                           derivatives[
                                                               "db" + str(layer_index)]
 
-            if loop % 10 == 0:  # logging of loss and accuracy after every few epochs
-                a_val, _ = self.forward(X_valid)
-                val_loss = -np.mean(y_valid * np.log(a_val.T + 1e-8)).round(3)
-                train_acc = self.predict(X_train, y_train)
-                val_acc = self.predict(X_valid, y_valid)
-                print("Train Loss: ", loss.round(3), "Train Accuracy:", train_acc,
+            a_val, _ = self.forward(X_valid)
+            val_loss = -np.mean(y_valid * np.log(a_val.T + 1e-8)).round(3)
+            train_acc = self.predict(X_train, y_train)
+            val_acc = self.predict(X_valid, y_valid)
+
+            if val_acc - best_val_acc > early_stop_val_acc_delta:
+                best_val_acc = val_acc
+                best_epoch = loop
+            else:
+                if loop - best_epoch >= early_stop_patience:
+                    print("Early stopping as validation accuracy didn't improve for ", early_stop_patience, " epochs")
+                    break
+
+            if (loop + 1) % 10 == 0:  # logging of loss and accuracy after every few epochs
+                print("Epoch ", loop + 1, "/", epochs, " - ", "Train Loss: ", loss.round(3), "Train Accuracy:",
+                      train_acc,
                       "Val Loss:", val_loss, "Val Accuracy:", val_acc)
 
                 self.train_loss.append(loss)
@@ -139,7 +154,7 @@ if __name__ == '__main__':
     # hyperparameters
     hidden_nodes = 50
     lr = 0.1
-    epochs = 1000
+    epochs = 5000
 
     # load the data
     all_train_x = pd.read_csv("train_data.csv").values  # normalized
