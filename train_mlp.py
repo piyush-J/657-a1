@@ -2,13 +2,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 from sklearn.model_selection import train_test_split
-
+import pickle
 
 class MLP_Q4:
-    def __init__(self, hidden_nodes: int):  # hidden_nodes - hyperparameter
+    def __init__(self, hidden_nodes: int, parameters: dict = None):  # hidden_nodes - hyperparameter
         self.output_classes = 4  # 4 output classes - as per the problem
         self.layers_size = [hidden_nodes, self.output_classes]
-        self.parameters = {}  # to store weights/biases
+        if parameters is not None:
+            self.parameters = parameters # to load available weights/biases
+        else:
+            self.parameters = {}  # to store weights/biases
         self.L = 2
         self.n = 0
         self.train_loss = []
@@ -171,3 +174,8 @@ if __name__ == '__main__':
     # plotting accuracy and loss
     mlp.plot_loss()
     mlp.plot_acc()
+
+    mlp.parameters['hidden_nodes'] = hidden_nodes
+
+    with open('mlp_params.pickle', 'wb') as handle:
+        pickle.dump(mlp.parameters, handle, protocol=pickle.HIGHEST_PROTOCOL)

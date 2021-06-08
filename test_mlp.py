@@ -1,26 +1,32 @@
 import numpy as np
+import pandas as pd
+import pickle
+from train_mlp import MLP_Q4
 
 STUDENT_NAME = 'YOUR NAME'
 STUDENT_ID = 'YOUR_ID'
 
 def test_mlp(data_file):
-	# Load the test set
-	# START
-	
+    # Load the test set
+
+    # START
+    test_set = pd.read_csv(data_file).values
     # END
 
+    # Load your network
+    # START
+    with open('mlp_params.pickle', 'rb') as handle:
+        params = pickle.load(handle)
+    mlp_model = MLP_Q4(params['hidden_nodes'], params)
+    o, _ = mlp_model.forward(test_set)
+    # END
 
-	# Load your network
-	# START
+    # Predict test set - one-hot encoded # y_pred = ...
+    y_hat = np.argmax(o, axis=0)
+    n_values = 4
+    y_pred = np.eye(n_values)[y_hat]
 
-	# END
-
-
-	# Predict test set - one-hot encoded
-	# y_pred = ...
-
-	# return y_pred
-
+    return y_pred
 
 '''
 How we will test your code:
