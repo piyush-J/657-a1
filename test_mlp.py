@@ -3,8 +3,8 @@ import pandas as pd
 import pickle
 from train_mlp import MLP_Q4
 
-STUDENT_NAME = 'YOUR NAME'
-STUDENT_ID = 'YOUR_ID'
+STUDENT_NAME = 'Piyush Jha, Anamika Sharma, Tarun Joseph'
+STUDENT_ID = '20879185, 20870698, 20916617'
 
 def test_mlp(data_file):
     # Load the test set
